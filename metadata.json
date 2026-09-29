@@ -1,0 +1,6 @@
+{
+  "name": "OurMoments - Handcrafted Birthday Surprises",
+  "description": "Create deeply personal, emotional, and interactive digital birthday experiences with midnight countdowns, virtual cake cutting, popping balloons, memory clotheslines, and wax-sealed letters.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
