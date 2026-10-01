@@ -95,7 +95,7 @@ export const RecipientCakeCandles: React.FC<RecipientCakeProps> = ({
   };
 
   const handleToggleManualVoice = () => {
-    if (!data.voiceNote?.audioUrl) return;
+    if (!candleAudioUrl) return;
     if (isPlayingVoice) {
       if (audioPlayerRef.current) {
         audioPlayerRef.current.pause();
