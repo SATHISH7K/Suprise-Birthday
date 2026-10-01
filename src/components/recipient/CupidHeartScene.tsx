@@ -36,7 +36,8 @@ export const CupidHeartScene: React.FC<CupidHeartSceneProps> = ({
 
   return (
     <div
-      className="fixed inset-0 w-full h-full bg-[#fdf8f5] flex flex-col items-center justify-between py-10 px-4 select-none overflow-hidden"
+      onClick={triggerShot}
+      className="fixed inset-0 w-full h-full bg-[#fdf8f5] flex flex-col items-center justify-between py-10 px-4 select-none overflow-hidden cursor-pointer"
       onPointerUp={() => {
         if (isDraggingRef.current && !shot) {
           isDraggingRef.current = false;
@@ -143,7 +144,10 @@ export const CupidHeartScene: React.FC<CupidHeartSceneProps> = ({
       {/* Lower Cupid's Bow & Arrow Controller */}
       <div className="relative z-10 w-full max-w-sm flex flex-col items-center pb-6">
         <div
-          onClick={triggerShot}
+          onClick={(e) => {
+            e.stopPropagation();
+            triggerShot();
+          }}
           onPointerDown={() => {
             isDraggingRef.current = true;
             setPullProgress(0.8);
@@ -206,13 +210,20 @@ export const CupidHeartScene: React.FC<CupidHeartSceneProps> = ({
           </svg>
         </div>
 
-        {/* Text Instruction */}
-        <p className="mt-2 text-xs uppercase tracking-[0.25em] font-semibold text-[#8c6760] flex items-center gap-1.5 animate-pulse">
-          <span>PULL &amp; RELEASE</span>
+        {/* Action Button */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            triggerShot();
+          }}
+          className="mt-2 px-6 py-2.5 rounded-full bg-gradient-to-r from-[#ff4d79] to-[#ff2664] text-white font-bold text-xs uppercase tracking-wider shadow-lg hover:scale-105 active:scale-95 transition-all cursor-pointer flex items-center gap-2"
+        >
+          <span>Tap to Release Arrow</span>
           <span>💘</span>
-        </p>
-        <span className="text-[11px] text-[#aa8780] mt-0.5">
-          Tap the bow to release the love arrow
+        </button>
+        <span className="text-[11px] text-[#aa8780] mt-1">
+          Or tap anywhere on the screen to start the surprise
         </span>
       </div>
     </div>

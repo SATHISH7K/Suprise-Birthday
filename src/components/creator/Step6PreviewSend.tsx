@@ -48,7 +48,7 @@ export const Step6PreviewSend: React.FC<Step6Props> = ({
       audioPreviewRef.current.volume = (data.soundtrackVolume || 50) / 100;
       audioPreviewRef.current.play()
         .then(() => setIsPlayingCustomAudio(true))
-        .catch(() => {});
+        .catch(() => { });
       audioPreviewRef.current.onended = () => {
         setIsPlayingCustomAudio(false);
       };
@@ -285,9 +285,8 @@ export const Step6PreviewSend: React.FC<Step6Props> = ({
                   <span className="text-[10px] text-[#786155]">Plays when candles are blown</span>
                 </div>
               </div>
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                data.voiceNoteCandle?.audioUrl ? 'bg-emerald-100 text-emerald-800' : 'bg-stone-200 text-stone-600'
-              }`}>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${data.voiceNoteCandle?.audioUrl ? 'bg-emerald-100 text-emerald-800' : 'bg-stone-200 text-stone-600'
+                }`}>
                 {data.voiceNoteCandle?.audioUrl ? 'Attached ✓' : 'Optional'}
               </span>
             </div>
@@ -300,9 +299,8 @@ export const Step6PreviewSend: React.FC<Step6Props> = ({
                   <span className="text-[10px] text-[#786155]">Plays on letter chapter</span>
                 </div>
               </div>
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                data.voiceNoteLetter?.audioUrl ? 'bg-emerald-100 text-emerald-800' : 'bg-stone-200 text-stone-600'
-              }`}>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${data.voiceNoteLetter?.audioUrl ? 'bg-emerald-100 text-emerald-800' : 'bg-stone-200 text-stone-600'
+                }`}>
                 {data.voiceNoteLetter?.audioUrl ? 'Attached ✓' : 'Optional'}
               </span>
             </div>
