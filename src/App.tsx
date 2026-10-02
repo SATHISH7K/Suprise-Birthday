@@ -26,7 +26,10 @@ export default function App() {
     try {
       const saved = localStorage.getItem('ourmoments_surprise');
       if (saved) {
-        return { ...DEFAULT_SURPRISE, ...JSON.parse(saved) };
+        const parsed = JSON.parse(saved);
+        if (parsed.recipientName && parsed.recipientName !== 'Ananya') {
+          return { ...DEFAULT_SURPRISE, ...parsed };
+        }
       }
     } catch {
       // Fallback
