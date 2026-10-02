@@ -18,6 +18,7 @@ import { RecipientExperience } from './components/recipient/RecipientExperience'
 import { SoundtrackStudioModal } from './components/modals/SoundtrackStudioModal';
 import { VoiceNoteModal } from './components/modals/VoiceNoteModal';
 import { toggleBackgroundMusic } from './utils/sound';
+import { decompressSurprise } from './utils/compression';
 
 export default function App() {
   // Load initial surprise data from localStorage if available
@@ -48,53 +49,85 @@ export default function App() {
   const [isSoundtrackModalOpen, setIsSoundtrackModalOpen] = useState(false);
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
   const [voiceModalSlot, setVoiceModalSlot] = useState<'candle' | 'letter'>('candle');
+  const [isLoadingSurprise, setIsLoadingSurprise] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      return Boolean(params.get('id') || params.get('surprise') || params.get('d'));
+    }
+    return false;
+  });
 
   // Check URL parameters on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const remoteId = params.get('id') || params.get('surprise');
+    const compressedData = params.get('d');
     const isReceiverParam = params.get('receiver') === 'true';
     const isPreviewParam = params.get('preview') === 'true';
 
-    // If an ID was shared, fetch the full surprise from the server
-    if (remoteId) {
-      setSurpriseId(remoteId);
-      fetch(`/api/surprises/${remoteId}`)
-        .then((res) => {
-          if (res.ok) return res.json();
-          throw new Error('Surprise not found');
-        })
-        .then((remoteData) => {
-          if (remoteData) {
-            setData((prev) => ({ ...prev, ...remoteData }));
+    async function loadSharedSurprise() {
+      let surpriseLoaded = false;
+
+      // 1. Immediately attempt decompression if URL payload is available (fastest on mobile)
+      if (compressedData) {
+        try {
+          const decompressed = await decompressSurprise(compressedData);
+          if (decompressed) {
+            setData((prev) => ({ ...prev, ...decompressed }));
+            surpriseLoaded = true;
           }
-        })
-        .catch((err) => {
-          console.warn('Could not load remote surprise:', err);
-        })
-        .finally(() => {
-          setIsReceiverMode(true);
-          setIsPreviewMode(true);
-        });
-      return;
+        } catch (e) {
+          console.warn('Decompression notice:', e);
+        }
+      }
+
+      // 2. Concurrently or additionally fetch full surprise payload from server API
+      if (remoteId) {
+        setSurpriseId(remoteId);
+        try {
+          const res = await fetch(`/api/surprises/${remoteId}`);
+          if (res.ok) {
+            const remoteData = await res.json();
+            if (remoteData) {
+              setData((prev) => ({ ...prev, ...remoteData }));
+              surpriseLoaded = true;
+            }
+          }
+        } catch (err) {
+          console.warn('Server surprise lookup notice:', err);
+        }
+      }
+
+      // 3. Query params fallback for star and sender name
+      const star = params.get('star');
+      const from = params.get('from');
+      if (star || from) {
+        setData((prev) => ({
+          ...prev,
+          recipientName: star || prev.recipientName,
+          senderName: from || prev.senderName,
+        }));
+      }
+
+      // 4. Activate Receiver presentation
+      if (remoteId || compressedData || isReceiverParam) {
+        setIsReceiverMode(true);
+        setIsPreviewMode(true);
+      } else if (isPreviewParam) {
+        setIsPreviewMode(true);
+        setIsReceiverMode(false);
+      }
+
+      // Small delay for smooth cinematic unwrap
+      setTimeout(() => {
+        setIsLoadingSurprise(false);
+      }, 400);
     }
 
-    if (isReceiverParam) {
-      setIsReceiverMode(true);
-      setIsPreviewMode(true);
-    } else if (isPreviewParam) {
-      setIsPreviewMode(true);
-      setIsReceiverMode(false);
-    }
-
-    const star = params.get('star');
-    const from = params.get('from');
-    if (star || from) {
-      setData((prev) => ({
-        ...prev,
-        recipientName: star || prev.recipientName,
-        senderName: from || prev.senderName,
-      }));
+    if (remoteId || compressedData || isReceiverParam || isPreviewParam) {
+      loadSharedSurprise();
+    } else {
+      setIsLoadingSurprise(false);
     }
   }, []);
 
@@ -162,6 +195,25 @@ export default function App() {
     // Auto-save surprise in the background
     handleSaveSurpriseToServer();
   };
+
+  if (isLoadingSurprise) {
+    return (
+      <div className="fixed inset-0 z-50 bg-[#14080e] flex flex-col items-center justify-center p-6 text-center select-none font-['Outfit',sans-serif]">
+        <div className="relative mb-6">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-[#f43f5e] to-[#fb923c] animate-pulse flex items-center justify-center text-3xl shadow-[0_0_35px_rgba(244,63,94,0.6)]">
+            🎁
+          </div>
+          <span className="absolute -top-1 -right-1 text-xl animate-bounce">✨</span>
+        </div>
+        <h2 className="text-2xl font-bold text-white tracking-tight mb-2">
+          Unwrapping Birthday Surprise...
+        </h2>
+        <p className="text-sm text-[#fda4af]/80 max-w-xs animate-pulse">
+          Gathering memories, melodies and heartfelt wishes ✨
+        </p>
+      </div>
+    );
+  }
 
   if (isPreviewMode) {
     return (

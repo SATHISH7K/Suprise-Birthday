@@ -16,24 +16,59 @@ export const Step4MemoryLane: React.FC<Step4Props> = ({ data, onChange, onNext, 
     'https://lh3.googleusercontent.com/aida-public/AB6AXuAMGVcyhpItKmXg9fOKIvipd5ceF17k6DSz6qyX5V1YAyTgKPVHtUZRzZ4DZlcuq7sD3PbGk0VpelxADx3QzTN5jHvS_i6qIdOQi7527343keAL07Z6SZ1T-C0CUQXMv-lLMHneWqCBBxiI9MLW7eTOdZncBpqEtUhuaQI5Bp4pVOcmMCxPg0Ayfh2ZgCZDUgIBnjRSLLtFOo3e9t4oZrqMP20uh70odj3Z5yztOVwb8zTHn6d6UkNq',
   ];
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const compressImage = (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const maxDim = 1200;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, width, height);
+            resolve(canvas.toDataURL('image/jpeg', 0.82));
+          } else {
+            resolve(e.target?.result as string);
+          }
+        };
+        img.onerror = () => resolve(e.target?.result as string);
+        img.src = e.target?.result as string;
+      };
+      reader.onerror = () => resolve('');
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const url = event.target?.result as string;
-      if (url && data.photos.length < 5) {
-        const newPhoto: MemoryPhoto = {
-          id: `p${Date.now()}`,
-          url,
-          caption: 'Special Memory ✨',
-          date: '2024',
-        };
-        onChange({ photos: [...data.photos, newPhoto] });
-      }
-    };
-    reader.readAsDataURL(file);
+    const compressedUrl = await compressImage(file);
+    if (compressedUrl && data.photos.length < 5) {
+      const newPhoto: MemoryPhoto = {
+        id: `p${Date.now()}`,
+        url: compressedUrl,
+        caption: 'Special Memory ✨',
+        date: '2024',
+      };
+      onChange({ photos: [...data.photos, newPhoto] });
+    }
   };
 
   const handleAddSample = () => {

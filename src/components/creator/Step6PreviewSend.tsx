@@ -3,6 +3,8 @@ import { SurpriseData, MemoryPhoto } from '../../types';
 import { CAKE_OPTIONS } from '../../defaultData';
 import { fireConfetti } from '../../utils/confetti';
 
+import { compressSurprise } from '../../utils/compression';
+
 interface Step6Props {
   data: SurpriseData;
   onSelectStep: (step: number) => void;
@@ -20,6 +22,7 @@ export const Step6PreviewSend: React.FC<Step6Props> = ({
 }) => {
   const [copied, setCopied] = useState(false);
   const [activeId, setActiveId] = useState(surpriseId || '');
+  const [compressedPayload, setCompressedPayload] = useState<string>('');
   const [isSaving, setIsSaving] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<MemoryPhoto | null>(null);
   const [isPlayingCustomAudio, setIsPlayingCustomAudio] = useState(false);
@@ -33,6 +36,19 @@ export const Step6PreviewSend: React.FC<Step6Props> = ({
       }
     };
   }, []);
+
+  // Compute compressed data payload for bulletproof offline/mobile fallback
+  useEffect(() => {
+    let isMounted = true;
+    compressSurprise(data).then((compressed) => {
+      if (isMounted && compressed) {
+        setCompressedPayload(compressed);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, [data]);
 
   const handleTogglePreview = () => {
     if (!data.customMusicUrl) return;
@@ -71,9 +87,19 @@ export const Step6PreviewSend: React.FC<Step6Props> = ({
     }
   }, [surpriseId, onSaveSurprise]);
 
-  const shareUrl = activeId
-    ? `${window.location.origin}?id=${encodeURIComponent(activeId)}&receiver=true`
-    : `${window.location.origin}?star=${encodeURIComponent(data.recipientName)}&from=${encodeURIComponent(data.senderName)}&receiver=true`;
+  // Construct high-reliability URL with server ID + compressed fallback + star/from
+  const queryParams = new URLSearchParams();
+  if (activeId) {
+    queryParams.set('id', activeId);
+  }
+  if (compressedPayload) {
+    queryParams.set('d', compressedPayload);
+  }
+  queryParams.set('star', data.recipientName);
+  queryParams.set('from', data.senderName);
+  queryParams.set('receiver', 'true');
+
+  const shareUrl = `${window.location.origin}?${queryParams.toString()}`;
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(shareUrl);
