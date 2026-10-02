@@ -87,18 +87,17 @@ export const Step6PreviewSend: React.FC<Step6Props> = ({
     }
   }, [surpriseId, onSaveSurprise]);
 
-  // Construct share URL with both server ID and compressed data fallback
+  // Build a clean share URL — server ID is the primary method since KV is configured
   const buildShareUrl = (currentId: string): string => {
     const params = new URLSearchParams();
     if (currentId) {
       params.set('id', currentId);
     }
     params.set('receiver', 'true');
-    // Include compressed data as inline fallback so the surprise works
-    // even if the server API can't find the ID (serverless cold start, no KV, etc.)
-    if (compressedPayload) {
-      params.set('d', compressedPayload);
-    }
+    // NOTE: We intentionally do NOT include d= compressed data here.
+    // The compressed payload makes URLs extremely long (1800+ chars) which gets
+    // corrupted/truncated by messaging apps like WhatsApp. The server KV storage
+    // is the reliable way to share surprise data.
     return `${window.location.origin}?${params.toString()}`;
   };
 
@@ -106,7 +105,8 @@ export const Step6PreviewSend: React.FC<Step6Props> = ({
 
   const getEffectiveShareUrl = async (): Promise<string> => {
     let currentId = activeId;
-    if (!currentId && onSaveSurprise) {
+    // Always ensure data is saved to server before sharing
+    if (onSaveSurprise) {
       try {
         setIsSaving(true);
         const id = await onSaveSurprise();
