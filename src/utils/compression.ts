@@ -39,24 +39,22 @@ function base64UrlToUint8Array(base64url: string): Uint8Array {
 function prepareDataForUrl(data: SurpriseData): any {
   const sanitized = { ...data };
 
-  // If photos contain very huge raw dataUrls, keep photos but if a single photo exceeds 400KB,
-  // we let the server API handle the full photo payload while URL keeps essential data
+  // Strip base64 data URLs for photos from URL parameter to keep URL ultra short and clean
   if (sanitized.photos && sanitized.photos.length > 0) {
     sanitized.photos = sanitized.photos.map((p) => ({
       ...p,
-      // If photo url is a reasonable data URL or external URL, preserve it
-      url: p.url && p.url.length > 300000 ? '' : p.url,
+      url: p.url && (p.url.startsWith('data:') || p.url.length > 1000) ? '' : p.url,
     }));
   }
 
-  // If custom audio is massive base64, don't blow up URL length (server API stores full audio)
-  if (sanitized.customMusicUrl && sanitized.customMusicUrl.length > 50000) {
+  // Strip base64 audio URLs for URL compression
+  if (sanitized.customMusicUrl && (sanitized.customMusicUrl.startsWith('data:') || sanitized.customMusicUrl.length > 1000)) {
     sanitized.customMusicUrl = undefined;
   }
-  if (sanitized.voiceNoteCandle?.audioUrl && sanitized.voiceNoteCandle.audioUrl.length > 50000) {
+  if (sanitized.voiceNoteCandle?.audioUrl && (sanitized.voiceNoteCandle.audioUrl.startsWith('data:') || sanitized.voiceNoteCandle.audioUrl.length > 1000)) {
     sanitized.voiceNoteCandle = { ...sanitized.voiceNoteCandle, audioUrl: undefined };
   }
-  if (sanitized.voiceNoteLetter?.audioUrl && sanitized.voiceNoteLetter.audioUrl.length > 50000) {
+  if (sanitized.voiceNoteLetter?.audioUrl && (sanitized.voiceNoteLetter.audioUrl.startsWith('data:') || sanitized.voiceNoteLetter.audioUrl.length > 1000)) {
     sanitized.voiceNoteLetter = { ...sanitized.voiceNoteLetter, audioUrl: undefined };
   }
 
