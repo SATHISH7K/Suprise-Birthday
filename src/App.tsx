@@ -92,7 +92,22 @@ export default function App() {
           if (res.ok) {
             const remoteData = await res.json();
             if (remoteData) {
-              setData((prev) => ({ ...prev, ...remoteData }));
+              setData((prev) => {
+                const merged = { ...prev, ...remoteData };
+                if (prev.voiceNoteCandle?.audioUrl && !remoteData.voiceNoteCandle?.audioUrl) {
+                  merged.voiceNoteCandle = prev.voiceNoteCandle;
+                }
+                if (prev.voiceNoteLetter?.audioUrl && !remoteData.voiceNoteLetter?.audioUrl) {
+                  merged.voiceNoteLetter = prev.voiceNoteLetter;
+                }
+                if (prev.voiceNote?.audioUrl && !remoteData.voiceNote?.audioUrl) {
+                  merged.voiceNote = prev.voiceNote;
+                }
+                if (prev.photos && prev.photos.length > 0 && (!remoteData.photos || remoteData.photos.length === 0)) {
+                  merged.photos = prev.photos;
+                }
+                return merged;
+              });
               surpriseLoaded = true;
             }
           }

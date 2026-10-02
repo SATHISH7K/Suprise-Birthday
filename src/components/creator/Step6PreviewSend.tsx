@@ -87,12 +87,12 @@ export const Step6PreviewSend: React.FC<Step6Props> = ({
     }
   }, [surpriseId, onSaveSurprise]);
 
-  // Construct clean, short, beautiful URL using the server surprise ID
+  // Construct clean, resilient URL using both server surprise ID and compressed payload
   const queryParams = new URLSearchParams();
   if (activeId) {
     queryParams.set('id', activeId);
-  } else if (compressedPayload) {
-    // Only use compressed fallback if server ID is not available
+  }
+  if (compressedPayload) {
     queryParams.set('d', compressedPayload);
     queryParams.set('star', data.recipientName);
     queryParams.set('from', data.senderName);
@@ -120,7 +120,8 @@ export const Step6PreviewSend: React.FC<Step6Props> = ({
     const params = new URLSearchParams();
     if (currentId) {
       params.set('id', currentId);
-    } else if (compressedPayload) {
+    }
+    if (compressedPayload) {
       params.set('d', compressedPayload);
       params.set('star', data.recipientName);
       params.set('from', data.senderName);
