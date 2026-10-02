@@ -37,8 +37,31 @@ function base64UrlToUint8Array(base64url: string): Uint8Array {
  * while keeping all core surprise content intact.
  */
 function prepareDataForUrl(data: SurpriseData): any {
-  // Keep all surprise data intact including photos and recorded voice notes
-  return { ...data };
+  const sanitized = { ...data };
+
+  // Strip base64 data URLs for photos from URL parameter to keep URL short
+  if (sanitized.photos && sanitized.photos.length > 0) {
+    sanitized.photos = sanitized.photos.map((p) => ({
+      ...p,
+      url: p.url && (p.url.startsWith('data:') || p.url.length > 1000) ? '' : p.url,
+    }));
+  }
+
+  // Strip base64 audio URLs for URL compression
+  if (sanitized.customMusicUrl && (sanitized.customMusicUrl.startsWith('data:') || sanitized.customMusicUrl.length > 1000)) {
+    sanitized.customMusicUrl = undefined;
+  }
+  if (sanitized.voiceNoteCandle?.audioUrl && (sanitized.voiceNoteCandle.audioUrl.startsWith('data:') || sanitized.voiceNoteCandle.audioUrl.length > 1000)) {
+    sanitized.voiceNoteCandle = { ...sanitized.voiceNoteCandle, audioUrl: undefined };
+  }
+  if (sanitized.voiceNoteLetter?.audioUrl && (sanitized.voiceNoteLetter.audioUrl.startsWith('data:') || sanitized.voiceNoteLetter.audioUrl.length > 1000)) {
+    sanitized.voiceNoteLetter = { ...sanitized.voiceNoteLetter, audioUrl: undefined };
+  }
+  if ((sanitized as any).voiceNote?.audioUrl && ((sanitized as any).voiceNote.audioUrl.startsWith('data:') || (sanitized as any).voiceNote.audioUrl.length > 1000)) {
+    (sanitized as any).voiceNote = { ...(sanitized as any).voiceNote, audioUrl: undefined };
+  }
+
+  return sanitized;
 }
 
 /**

@@ -213,14 +213,7 @@ app.get(['/api/surprises/:id', '/surprises/:id'], async (req, res) => {
       return res.json(fileData[surpriseId]);
     }
 
-    // 4. Static Fallback: return default/static surprise data (bday-021i17r or first available)
-    const fallbackSurprise = fileData['bday-021i17r'] || fileData[Object.keys(fileData)[0]];
-    if (fallbackSurprise) {
-      const result = { ...fallbackSurprise, id: surpriseId };
-      surprisesStore[surpriseId] = result;
-      return res.json(result);
-    }
-
+    // Return 404 — do NOT fall back to a different surprise
     return res.status(404).json({ error: 'Surprise not found' });
   } catch (err: any) {
     console.error('Failed to get surprise:', err);

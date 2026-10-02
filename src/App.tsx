@@ -110,6 +110,9 @@ export default function App() {
               });
               surpriseLoaded = true;
             }
+          } else {
+            // Server doesn't have this surprise — compressed URL data (if present) is the fallback
+            console.info(`[OurMoments] Surprise "${remoteId}" not found on server (${res.status}). ${surpriseLoaded ? 'Using compressed URL data.' : 'No data available.'}`);
           }
         } catch (err) {
           console.warn('Server surprise lookup notice:', err);

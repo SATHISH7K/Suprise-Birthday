@@ -63,9 +63,9 @@ async function startServer() {
   app.get(['/api/surprises/:id', '/surprises/:id'], (req, res) => {
     try {
       const allSurprises = getSurprises();
-      const surprise = allSurprises[req.params.id] || allSurprises['bday-021i17r'] || allSurprises[Object.keys(allSurprises)[0]];
+      const surprise = allSurprises[req.params.id];
       if (surprise) {
-        res.json({ ...surprise, id: req.params.id });
+        res.json(surprise);
       } else {
         res.status(404).json({ error: 'Surprise not found' });
       }

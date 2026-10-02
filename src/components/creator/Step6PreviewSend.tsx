@@ -87,19 +87,22 @@ export const Step6PreviewSend: React.FC<Step6Props> = ({
     }
   }, [surpriseId, onSaveSurprise]);
 
-  // Construct clean, resilient URL using both server surprise ID and compressed payload
-  const queryParams = new URLSearchParams();
-  if (activeId) {
-    queryParams.set('id', activeId);
-  }
-  if (compressedPayload) {
-    queryParams.set('d', compressedPayload);
-    queryParams.set('star', data.recipientName);
-    queryParams.set('from', data.senderName);
-  }
-  queryParams.set('receiver', 'true');
+  // Construct share URL with both server ID and compressed data fallback
+  const buildShareUrl = (currentId: string): string => {
+    const params = new URLSearchParams();
+    if (currentId) {
+      params.set('id', currentId);
+    }
+    params.set('receiver', 'true');
+    // Include compressed data as inline fallback so the surprise works
+    // even if the server API can't find the ID (serverless cold start, no KV, etc.)
+    if (compressedPayload) {
+      params.set('d', compressedPayload);
+    }
+    return `${window.location.origin}?${params.toString()}`;
+  };
 
-  const shareUrl = `${window.location.origin}?${queryParams.toString()}`;
+  const shareUrl = buildShareUrl(activeId);
 
   const getEffectiveShareUrl = async (): Promise<string> => {
     let currentId = activeId;
@@ -117,17 +120,7 @@ export const Step6PreviewSend: React.FC<Step6Props> = ({
         setIsSaving(false);
       }
     }
-    const params = new URLSearchParams();
-    if (currentId) {
-      params.set('id', currentId);
-    }
-    if (compressedPayload) {
-      params.set('d', compressedPayload);
-      params.set('star', data.recipientName);
-      params.set('from', data.senderName);
-    }
-    params.set('receiver', 'true');
-    return `${window.location.origin}?${params.toString()}`;
+    return buildShareUrl(currentId);
   };
 
   const handleCopyLink = async () => {
