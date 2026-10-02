@@ -63,8 +63,16 @@ const writeFileStorage = (data: Record<string, any>) => {
 
 // Layer 3: Upstash Redis / Vercel KV REST API Integration
 const getKvConfig = () => {
-  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+  const url =
+    process.env.KV_REST_API_URL ||
+    process.env.UPSTASH_REDIS_REST_URL ||
+    process.env.VERCEL_KV_REST_API_URL ||
+    process.env.STORAGE_KV_REST_API_URL;
+  const token =
+    process.env.KV_REST_API_TOKEN ||
+    process.env.UPSTASH_REDIS_REST_TOKEN ||
+    process.env.VERCEL_KV_REST_API_TOKEN ||
+    process.env.STORAGE_KV_REST_API_TOKEN;
   return { url, token, isConfigured: Boolean(url && token) };
 };
 
@@ -73,7 +81,8 @@ const saveToCloudKv = async (key: string, value: any): Promise<boolean> => {
   if (!isConfigured || !url || !token) return false;
 
   try {
-    const response = await fetch(`${url}/set/${key}`, {
+    const safeKey = encodeURIComponent(key);
+    const response = await fetch(`${url}/set/${safeKey}`, {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${token}`,
@@ -81,6 +90,11 @@ const saveToCloudKv = async (key: string, value: any): Promise<boolean> => {
       },
       body: JSON.stringify(value),
     });
+    if (response.ok) {
+      console.log(`[Cloud KV] Successfully saved surprise: ${key}`);
+    } else {
+      console.warn(`[Cloud KV] Save failed with status: ${response.status}`);
+    }
     return response.ok;
   } catch (err) {
     console.warn('[Cloud KV Set Error]:', err);
@@ -93,14 +107,16 @@ const getFromCloudKv = async (key: string): Promise<any | null> => {
   if (!isConfigured || !url || !token) return null;
 
   try {
-    const response = await fetch(`${url}/get/${key}`, {
+    const safeKey = encodeURIComponent(key);
+    const response = await fetch(`${url}/get/${safeKey}`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
     if (!response.ok) return null;
     const data = await response.json();
-    if (data && data.result) {
+    if (data && data.result !== null && data.result !== undefined) {
+      console.log(`[Cloud KV] Successfully retrieved surprise: ${key}`);
       if (typeof data.result === 'string') {
         try {
           return JSON.parse(data.result);
