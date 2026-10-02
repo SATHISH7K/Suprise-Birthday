@@ -87,13 +87,15 @@ export const Step6PreviewSend: React.FC<Step6Props> = ({
     }
   }, [surpriseId, onSaveSurprise]);
 
-  // Construct clean, compact URL using the server surprise ID
+  // Construct bulletproof URL using both server surprise ID and compressed fallback payload
   const queryParams = new URLSearchParams();
   if (activeId) {
     queryParams.set('id', activeId);
-  } else if (compressedPayload) {
-    // Only use compressed fallback if server ID is not available
+  }
+  if (compressedPayload) {
     queryParams.set('d', compressedPayload);
+  }
+  if (!activeId && !compressedPayload) {
     queryParams.set('star', data.recipientName);
     queryParams.set('from', data.senderName);
   }
@@ -102,16 +104,14 @@ export const Step6PreviewSend: React.FC<Step6Props> = ({
   const shareUrl = `${window.location.origin}?${queryParams.toString()}`;
 
   const getEffectiveShareUrl = async (): Promise<string> => {
-    if (activeId) {
-      return `${window.location.origin}?id=${activeId}&receiver=true`;
-    }
-    if (onSaveSurprise) {
+    let currentId = activeId;
+    if (!currentId && onSaveSurprise) {
       try {
         setIsSaving(true);
         const id = await onSaveSurprise();
         if (id) {
+          currentId = id;
           setActiveId(id);
-          return `${window.location.origin}?id=${id}&receiver=true`;
         }
       } catch (err) {
         console.warn('Auto-save error before share:', err);
@@ -119,7 +119,11 @@ export const Step6PreviewSend: React.FC<Step6Props> = ({
         setIsSaving(false);
       }
     }
-    return shareUrl;
+    const params = new URLSearchParams();
+    if (currentId) params.set('id', currentId);
+    if (compressedPayload) params.set('d', compressedPayload);
+    params.set('receiver', 'true');
+    return `${window.location.origin}?${params.toString()}`;
   };
 
   const handleCopyLink = async () => {

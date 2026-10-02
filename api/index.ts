@@ -154,7 +154,7 @@ const getFromCloudKv = async (key: string): Promise<any | null> => {
 };
 
 // Save or update surprise data
-app.post('/api/surprises', async (req, res) => {
+app.post(['/api/surprises', '/surprises'], async (req, res) => {
   try {
     const surprise = req.body;
     if (!surprise || typeof surprise !== 'object') {
@@ -191,7 +191,7 @@ app.post('/api/surprises', async (req, res) => {
 });
 
 // Retrieve surprise data for recipient
-app.get('/api/surprises/:id', async (req, res) => {
+app.get(['/api/surprises/:id', '/surprises/:id'], async (req, res) => {
   const surpriseId = req.params.id;
   try {
     // 1. Check in-memory
@@ -221,7 +221,7 @@ app.get('/api/surprises/:id', async (req, res) => {
 });
 
 // Health check endpoint
-app.get('/api/health', (_req, res) => {
+app.get(['/api/health', '/health'], (_req, res) => {
   const { isConfigured } = getKvConfig();
   res.json({
     status: 'ok',

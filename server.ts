@@ -39,7 +39,7 @@ async function startServer() {
   };
 
   // API Route: Save or update surprise data
-  app.post('/api/surprises', (req, res) => {
+  app.post(['/api/surprises', '/surprises'], (req, res) => {
     try {
       const surprise = req.body;
       const surpriseId = surprise.id || `bday-${Math.random().toString(36).substring(2, 9)}`;
@@ -60,7 +60,7 @@ async function startServer() {
   });
 
   // API Route: Retrieve surprise data for recipient
-  app.get('/api/surprises/:id', (req, res) => {
+  app.get(['/api/surprises/:id', '/surprises/:id'], (req, res) => {
     try {
       const allSurprises = getSurprises();
       const surprise = allSurprises[req.params.id];
@@ -75,7 +75,7 @@ async function startServer() {
   });
 
   // Health check endpoint
-  app.get('/api/health', (_req, res) => {
+  app.get(['/api/health', '/health'], (_req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() });
   });
 
