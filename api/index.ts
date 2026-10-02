@@ -63,16 +63,37 @@ const writeFileStorage = (data: Record<string, any>) => {
 
 // Layer 3: Upstash Redis / Vercel KV REST API Integration
 const getKvConfig = () => {
-  const url =
+  let url =
+    process.env.STORAGE_REST_API_URL ||
+    process.env.STORAGE_KV_REST_API_URL ||
+    process.env.STORAGE_UPSTASH_REDIS_REST_URL ||
+    process.env.STORAGE_URL ||
     process.env.KV_REST_API_URL ||
     process.env.UPSTASH_REDIS_REST_URL ||
-    process.env.VERCEL_KV_REST_API_URL ||
-    process.env.STORAGE_KV_REST_API_URL;
-  const token =
+    process.env.VERCEL_KV_REST_API_URL;
+
+  let token =
+    process.env.STORAGE_REST_API_TOKEN ||
+    process.env.STORAGE_KV_REST_API_TOKEN ||
+    process.env.STORAGE_UPSTASH_REDIS_REST_TOKEN ||
+    process.env.STORAGE_TOKEN ||
     process.env.KV_REST_API_TOKEN ||
     process.env.UPSTASH_REDIS_REST_TOKEN ||
-    process.env.VERCEL_KV_REST_API_TOKEN ||
-    process.env.STORAGE_KV_REST_API_TOKEN;
+    process.env.VERCEL_KV_REST_API_TOKEN;
+
+  // Dynamic fallback scan for any custom prefix
+  if (!url || !token) {
+    for (const [k, v] of Object.entries(process.env)) {
+      if (!v) continue;
+      if (!url && (k.endsWith('_REST_API_URL') || k.endsWith('_REDIS_REST_URL') || k.endsWith('_URL')) && v.startsWith('http')) {
+        url = v;
+      }
+      if (!token && (k.endsWith('_REST_API_TOKEN') || k.endsWith('_REDIS_REST_TOKEN') || k.endsWith('_TOKEN')) && v.length > 15) {
+        token = v;
+      }
+    }
+  }
+
   return { url, token, isConfigured: Boolean(url && token) };
 };
 
