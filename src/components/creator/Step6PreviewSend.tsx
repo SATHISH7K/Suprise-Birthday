@@ -87,30 +87,76 @@ export const Step6PreviewSend: React.FC<Step6Props> = ({
     }
   }, [surpriseId, onSaveSurprise]);
 
-  // Construct high-reliability URL with server ID + compressed fallback + star/from
+  // Construct clean, compact URL using the server surprise ID
   const queryParams = new URLSearchParams();
   if (activeId) {
     queryParams.set('id', activeId);
-  }
-  if (compressedPayload) {
+  } else if (compressedPayload) {
+    // Only use compressed fallback if server ID is not available
     queryParams.set('d', compressedPayload);
+    queryParams.set('star', data.recipientName);
+    queryParams.set('from', data.senderName);
   }
-  queryParams.set('star', data.recipientName);
-  queryParams.set('from', data.senderName);
   queryParams.set('receiver', 'true');
 
   const shareUrl = `${window.location.origin}?${queryParams.toString()}`;
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText(shareUrl);
+  const getEffectiveShareUrl = async (): Promise<string> => {
+    if (activeId) {
+      return `${window.location.origin}?id=${activeId}&receiver=true`;
+    }
+    if (onSaveSurprise) {
+      try {
+        setIsSaving(true);
+        const id = await onSaveSurprise();
+        if (id) {
+          setActiveId(id);
+          return `${window.location.origin}?id=${id}&receiver=true`;
+        }
+      } catch (err) {
+        console.warn('Auto-save error before share:', err);
+      } finally {
+        setIsSaving(false);
+      }
+    }
+    return shareUrl;
+  };
+
+  const handleCopyLink = async () => {
+    const url = await getEffectiveShareUrl();
+    navigator.clipboard.writeText(url);
     setCopied(true);
     fireConfetti(window.innerWidth / 2, window.innerHeight * 0.4, 30);
     setTimeout(() => setCopied(false), 2800);
   };
 
-  const whatsappMessage = encodeURIComponent(
-    `Hey ${data.recipientName}! 🎀 I handcrafted something special and unforgettable just for your birthday... Open your surprise here: ${shareUrl} ✨`
-  );
+  const handleShareWhatsApp = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    const url = await getEffectiveShareUrl();
+    const msg = encodeURIComponent(
+      `Hey ${data.recipientName}! 🎀 I handcrafted something special and unforgettable just for your birthday... Open your surprise here: ${url} ✨`
+    );
+    window.open(`https://api.whatsapp.com/send?text=${msg}`, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleNativeShare = async () => {
+    const url = await getEffectiveShareUrl();
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `Birthday Surprise for ${data.recipientName}`,
+          text: `A handcrafted birthday surprise for ${data.recipientName} with love by ${data.senderName}`,
+          url: url,
+        });
+      } catch {
+        // User canceled or share failed
+      }
+    } else {
+      navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2800);
+    }
+  };
 
   return (
     <div className="flex flex-col w-full items-center justify-center py-8 px-4 relative select-none">
@@ -550,28 +596,17 @@ export const Step6PreviewSend: React.FC<Step6Props> = ({
 
         {/* Social Quick Share Buttons */}
         <div className="flex flex-wrap items-center gap-3 pt-1">
-          <a
-            href={`https://api.whatsapp.com/send?text=${whatsappMessage}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#25D366] hover:bg-[#20ba59] text-white font-semibold text-xs sm:text-sm shadow-xs transition-all active:scale-95"
+          <button
+            type="button"
+            onClick={handleShareWhatsApp}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#25D366] hover:bg-[#20ba59] text-white font-semibold text-xs sm:text-sm shadow-xs transition-all active:scale-95 cursor-pointer"
           >
             <span>Share via WhatsApp 💬</span>
-          </a>
+          </button>
 
           <button
             type="button"
-            onClick={() => {
-              if (navigator.share) {
-                navigator.share({
-                  title: `Birthday Surprise for ${data.recipientName}`,
-                  text: `A handcrafted birthday surprise for ${data.recipientName} with love by ${data.senderName}`,
-                  url: shareUrl,
-                });
-              } else {
-                handleCopyLink();
-              }
-            }}
+            onClick={handleNativeShare}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-full bg-white text-[#261812] font-semibold text-xs sm:text-sm border border-[#fce8dc] shadow-xs hover:bg-[#ffe9e1] transition-all cursor-pointer"
           >
             <span className="material-symbols-outlined text-[18px]">share</span>

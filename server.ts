@@ -44,13 +44,13 @@ async function startServer() {
       const surprise = req.body;
       const surpriseId = surprise.id || `bday-${Math.random().toString(36).substring(2, 9)}`;
       const allSurprises = getSurprises();
-      
+
       allSurprises[surpriseId] = {
         ...surprise,
         id: surpriseId,
         updatedAt: new Date().toISOString(),
       };
-      
+
       saveSurprises(allSurprises);
       res.json({ success: true, id: surpriseId });
     } catch (err: any) {

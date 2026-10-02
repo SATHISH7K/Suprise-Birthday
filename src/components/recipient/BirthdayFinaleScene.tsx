@@ -98,11 +98,10 @@ export const BirthdayFinaleScene: React.FC<BirthdayFinaleSceneProps> = ({
                 key={p.id || idx}
                 type="button"
                 onClick={() => setActivePhotoIdx(idx)}
-                className={`w-9 h-9 rounded-full overflow-hidden border-2 transition-all cursor-pointer ${
-                  activePhotoIdx === idx
+                className={`w-9 h-9 rounded-full overflow-hidden border-2 transition-all cursor-pointer ${activePhotoIdx === idx
                     ? 'border-[#ffd56b] scale-110 shadow-md'
                     : 'border-white/30 opacity-60 hover:opacity-100'
-                }`}
+                  }`}
               >
                 <img
                   src={p.url}
@@ -144,11 +143,10 @@ export const BirthdayFinaleScene: React.FC<BirthdayFinaleSceneProps> = ({
         <button
           type="button"
           onClick={handleSendHug}
-          className={`w-full py-3 px-6 rounded-full text-xs sm:text-sm font-semibold border transition-all flex items-center justify-center gap-2 cursor-pointer ${
-            hugSent
+          className={`w-full py-3 px-6 rounded-full text-xs sm:text-sm font-semibold border transition-all flex items-center justify-center gap-2 cursor-pointer ${hugSent
               ? 'bg-pink-600/30 border-pink-400 text-pink-200'
               : 'bg-white/15 hover:bg-white/20 border-white/25 text-white active:scale-98'
-          }`}
+            }`}
         >
           <span>{hugSent ? 'Hug Sent! 🫂' : `Send ${data.senderName} a Hug 🤗`}</span>
         </button>

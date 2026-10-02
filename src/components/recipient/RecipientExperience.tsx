@@ -132,9 +132,8 @@ export const RecipientExperience: React.FC<RecipientExperienceProps> = ({
           <button
             type="button"
             onClick={() => setInspectorMode(!inspectorMode)}
-            className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
-              inspectorMode ? 'bg-[#e11d48] text-white shadow-xs' : 'bg-white/10 text-white/80 hover:bg-white/20'
-            }`}
+            className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${inspectorMode ? 'bg-[#e11d48] text-white shadow-xs' : 'bg-white/10 text-white/80 hover:bg-white/20'
+              }`}
           >
             <span className="material-symbols-outlined text-[15px]">tune</span>
             <span>Jump Scene</span>
@@ -167,9 +166,8 @@ export const RecipientExperience: React.FC<RecipientExperienceProps> = ({
                     setScene(st.id);
                     setInspectorMode(false);
                   }}
-                  className={`px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap flex items-center gap-1 cursor-pointer transition-all ${
-                    scene === st.id ? 'bg-[#e11d48] text-white shadow-xs' : 'bg-white/10 text-white/80 hover:bg-white/20'
-                  }`}
+                  className={`px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap flex items-center gap-1 cursor-pointer transition-all ${scene === st.id ? 'bg-[#e11d48] text-white shadow-xs' : 'bg-white/10 text-white/80 hover:bg-white/20'
+                    }`}
                 >
                   <span>{st.emoji}</span>
                   <span>{st.label}</span>
